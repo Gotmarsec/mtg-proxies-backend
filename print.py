@@ -53,6 +53,38 @@ if __name__ == "__main__":
         default=None,
         metavar="COLOR",
     )
+    parser.add_argument(
+        "--intelligent_background",
+        action=argparse.BooleanOptionalAction,
+        help='color background based on individual card',
+        default=False,
+    )
+    parser.add_argument(
+        "--directInput",
+        action=argparse.BooleanOptionalAction,
+        help='instead of filepath to text file, is the input string directly',
+        default=False,
+    )
+    parser.add_argument(
+        "--directOutput",
+        action=argparse.BooleanOptionalAction,
+        help='instead of saving the file locally, is the output is returned directly',
+        default=False,
+    )
+    parser.add_argument(
+        "--hSpace",
+        help="horizontal spacing between cards (default: %(default)s)",
+        type=int,
+        default=0,
+        metavar="PIXELS",
+    )
+    parser.add_argument(
+        "--vSpace",
+        help="vertical spacing between cards (default: %(default)s)",
+        type=int,
+        default=0,
+        metavar="PIXELS",
+    )
     parser.add_argument("--cropmarks", action=argparse.BooleanOptionalAction, default=True, help="add crop marks")
     args = parser.parse_args()
 

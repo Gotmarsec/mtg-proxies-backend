@@ -10,6 +10,8 @@ from tqdm import tqdm
 
 from mtgproxies.plotting import SplitPages
 
+from PIL import Image, ImageDraw
+
 image_size = np.array([745, 1040])
 
 
@@ -103,6 +105,7 @@ def print_cards_fpdf(
     cardsize=np.array([2.5 * 25.4, 3.5 * 25.4]),
     border_crop: int = 14,
     background_color: tuple[int, int, int] = None,
+    intelligent_background: bool = False,
     cropmarks: bool = True,
 ):
     """Print a list of cards to a pdf file.
@@ -155,6 +158,39 @@ def print_cards_fpdf(
         # Compute extent
         lower = offset + _occupied_space(cardsize, np.array([x, y]), border_crop)
         size = cardsize * (image_size - [left, top]) / image_size
+
+
+
+        #Custom background
+        if intelligent_background is True:
+            boxsize = 40
+            radius = 42
+            path = Path(image)
+            customBG_image = str(path.parent / ("customBG_" + path.stem + path.suffix))
+            customBG_image_path = Path(customBG_image)
+
+            im = Image.open(path).convert('RGBA')
+            overlay = Image.new('RGBA', im.size)
+            draw = ImageDraw.Draw(overlay)
+
+            color_topleft = im.getpixel((20, 20))
+            color_topright = im.getpixel((im.size[0]-20, 20))
+            color_bottomleft = im.getpixel((20, im.size[1]-20))
+            color_bottomright = im.getpixel((im.size[0]-20, im.size[1]-20))
+
+            draw.rectangle([(0, 0), (boxsize,boxsize)], fill=color_topleft)
+            draw.rectangle([(0, im.size[1]-boxsize), (boxsize, im.size[1])], fill=color_bottomleft)
+            draw.rectangle([(im.size[0]-boxsize, 0), (im.size[0], boxsize)], fill=color_topright)
+            draw.rectangle([(im.size[0]-boxsize, im.size[1]-boxsize), (im.size[0], im.size[1])], fill=color_bottomright)
+            draw.rounded_rectangle([(0, 0), im.size], radius=radius, fill=(0, 0, 0, 0))
+
+            im = Image.alpha_composite(im, overlay)
+            im = im.convert("RGB") # Remove alpha for saving in jpg format.
+            im.save(customBG_image_path)
+
+            current_image = plt.imread(customBG_image_path)
+
+            cropped_image = customBG_image
 
         # Plot image
         pdf.image(cropped_image, x=lower[0], y=lower[1], w=size[0], h=size[1])
