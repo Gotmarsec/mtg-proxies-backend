@@ -15,8 +15,7 @@ def papersize(string: str) -> np.ndarray:
         return np.array([float(split[0]), float(split[1])])
     raise argparse.ArgumentTypeError()
 
-
-if __name__ == "__main__":
+def genPdf(customArgs = None, pipe=None):
     parser = argparse.ArgumentParser(description="Prepare a decklist for printing.")
     parser.add_argument(
         "decklist",
@@ -86,13 +85,17 @@ if __name__ == "__main__":
         metavar="PIXELS",
     )
     parser.add_argument("--cropmarks", action=argparse.BooleanOptionalAction, default=True, help="add crop marks")
-    args = parser.parse_args()
+
+    if(customArgs == None):
+        args = parser.parse_args()
+    else:
+        args = parser.parse_args(customArgs)
 
     # Parse decklist
-    decklist = parse_decklist_spec(args.decklist)
+    decklist = parse_decklist_spec(args.decklist, inputAsString=args.directInput, pipe=pipe)
 
     # Fetch scans
-    images = fetch_scans_scryfall(decklist)
+    images = fetch_scans_scryfall(decklist, pipe=pipe)
 
     # Plot cards
     if args.outfile.endswith(".pdf"):
@@ -102,15 +105,23 @@ if __name__ == "__main__":
         if background_color is not None:
             background_color = (np.array(colors.to_rgb(background_color)) * 255).astype(int)
 
-        print_cards_fpdf(
+        pdf = print_cards_fpdf(
             images,
             args.outfile,
             papersize=args.paper * 25.4,
             cardsize=np.array([2.5, 3.5]) * 25.4 * args.scale,
             border_crop=args.border_crop,
+            hSpace=args.hSpace,
+            vSpace=args.vSpace,
             background_color=background_color,
+            intelligent_background=args.intelligent_background,
             cropmarks=args.cropmarks,
+            return_pdf=args.directOutput,
+            pipe=pipe
         )
+
+        if(args.directOutput == True):
+            return pdf
     else:
         print_cards_matplotlib(
             images,
@@ -121,3 +132,7 @@ if __name__ == "__main__":
             border_crop=args.border_crop,
             background_color=args.background,
         )
+
+if __name__ == "__main__":
+    genPdf()
+

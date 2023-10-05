@@ -107,6 +107,8 @@ def print_cards_fpdf(
     background_color: tuple[int, int, int] = None,
     intelligent_background: bool = False,
     cropmarks: bool = True,
+    return_pdf: bool = False,
+    pipe = None,
 ):
     """Print a list of cards to a pdf file.
 
@@ -132,7 +134,9 @@ def print_cards_fpdf(
     # Initialize PDF
     pdf = FPDF(orientation="P", unit="mm", format="A4")
 
+    pipe.send(["message", "Plotting cards..."])
     for i, image in enumerate(tqdm(images, desc="Plotting cards")):
+        pipe.send(["progress", str(int((i+1)*50/len(images))+50)])
         if i % cards_per_sheet == 0:  # Startign a new sheet
             pdf.add_page()
             if background_color is not None:
@@ -208,4 +212,8 @@ def print_cards_fpdf(
                     pdf.line(mark[0], mark[1] - 0.5, mark[0], mark[1] + 0.5)
 
     tqdm.write(f"Writing to {filepath}")
+    if(return_pdf == True):
+        pipe.send(["complete", "true"])
+        return pdf
+
     pdf.output(filepath)
