@@ -62,7 +62,7 @@ COUNT FULL_NAME (SET) COLLECTOR_NUMBER
 ```
 
 E.g.:
-
+ 
 ```txt
 1 Alela, Artful Provocateur (ELD) 324
 1 Korvold, Fae-Cursed King (ELD) 329
