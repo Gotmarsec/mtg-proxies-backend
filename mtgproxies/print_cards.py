@@ -104,11 +104,13 @@ def print_cards_fpdf(
     papersize=np.array([210, 297]),
     cardsize=np.array([2.5 * 25.4, 3.5 * 25.4]),
     border_crop: int = 14,
+    hSpace=0,
+    vSpace=0,
     background_color: tuple[int, int, int] = None,
     intelligent_background: bool = False,
     cropmarks: bool = True,
     return_pdf: bool = False,
-    pipe = None,
+    queue = None,
 ):
     """Print a list of cards to a pdf file.
 
@@ -134,9 +136,9 @@ def print_cards_fpdf(
     # Initialize PDF
     pdf = FPDF(orientation="P", unit="mm", format="A4")
 
-    pipe.send(["message", "Plotting cards..."])
+    queue.put(["message", "Plotting cards..."], timeout=5)
     for i, image in enumerate(tqdm(images, desc="Plotting cards")):
-        pipe.send(["progress", str(int((i+1)*50/len(images))+50)])
+        queue.put(["progress", str(int((i+1)*50/len(images))+50)], timeout=5)
         if i % cards_per_sheet == 0:  # Startign a new sheet
             pdf.add_page()
             if background_color is not None:
@@ -159,10 +161,20 @@ def print_cards_fpdf(
                 # Crop image
                 plt.imsave(cropped_image, plt.imread(image)[top:, left:])
 
-        # Compute extent
-        lower = offset + _occupied_space(cardsize, np.array([x, y]), border_crop)
-        size = cardsize * (image_size - [left, top]) / image_size
+        # Compute spaces between images
+        hBorder = np.full(N[0], 0)
+        vBorder = np.full(N[1], 0)
 
+        if hSpace is not 0:
+            hBorder = np.arange(0, N[0]*hSpace, hSpace)
+            hBorder = hBorder-hSpace*(N[0]-1)/2
+        if vSpace is not 0:
+            vBorder = np.arange(0, N[1]*vSpace, vSpace)
+            vBorder = vBorder-vSpace*(N[1]-1)/2
+
+        # Compute extent
+        lower = offset + _occupied_space(cardsize, np.array([x, y]), border_crop) + np.array([hBorder[x], vBorder[y]])
+        size = cardsize * (image_size - [left, top]) / image_size
 
 
         #Custom background
@@ -213,7 +225,7 @@ def print_cards_fpdf(
 
     tqdm.write(f"Writing to {filepath}")
     if(return_pdf == True):
-        pipe.send(["complete", "true"])
+        queue.put(["complete", "true"], timeout=5)
         return pdf
 
     pdf.output(filepath)

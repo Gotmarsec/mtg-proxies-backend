@@ -70,7 +70,7 @@ def get_print_warnings(card):
     return warnings
 
 
-def validate_print(card_name: str, set_id: str, collector_number: str):
+def validate_print(card_name: str, set_id: str, collector_number: str, unsafe_card_name=None):
     """Validate a print against the Scryfall database.
 
     Assumes card name is valid.
@@ -90,8 +90,11 @@ def validate_print(card_name: str, set_id: str, collector_number: str):
             )
     else:
         card = scryfall.get_card(card_name, set_id, collector_number)
+
         if card is None:  # No exact match
             # Find alternative print
+            if unsafe_card_name is not None:
+                card_name=unsafe_card_name
             card = scryfall.recommend_print(card_name=card_name)
             warnings.append(
                 (

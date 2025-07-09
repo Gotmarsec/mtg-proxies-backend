@@ -6,7 +6,7 @@ from mtgproxies.decklists.decklist import Decklist
 from io import StringIO
 
 
-def parse_decklist_spec(decklist_spec: str, warn_levels=["ERROR", "WARNING", "COSMETIC"], inputAsString=True, pipe=None) -> Decklist:
+def parse_decklist_spec(decklist_spec: str, warn_levels=["ERROR", "WARNING", "COSMETIC"], inputAsString=True, queue=None) -> Decklist:
     """Attempt to parse a decklist from different locations.
 
     Args:
@@ -14,8 +14,8 @@ def parse_decklist_spec(decklist_spec: str, warn_levels=["ERROR", "WARNING", "CO
         warn_levels: Levels of warnings to show
     """
     print("Parsing decklist ...")
-    if pipe is not None:
-        pipe.send(["message", "Parsing decklist ..."])
+    if queue is not None:
+        queue.put(["message", "Parsing decklist ..."], timeout=5)
     if inputAsString is True:
         decklist, ok, warnings = parse_decklist_stream(StringIO(decklist_spec))
     elif Path(decklist_spec).is_file():  # Decklist is file
@@ -36,17 +36,17 @@ def parse_decklist_spec(decklist_spec: str, warn_levels=["ERROR", "WARNING", "CO
     for _, level, msg in warnings:
         if level in warn_levels:
             print(f"{level}: {msg}")
-            if pipe is not None:
-                pipe.send(["message", f"{level}: {msg}"])
+            if queue is not None:
+                queue.put(["message", f"{level}: {msg}"], timeout=5)
 
     # Check for grave errors
     if not ok:
         print("Decklist contains invalid card names. Fix errors above before reattempting.")
-        if pipe is not None:
-            pipe.send(["message", "Decklist contains invalid card names. Fix errors above before reattempting."])
+        if queue is not None:
+            queue.put(["message", "Decklist contains invalid card names. Fix errors above before reattempting."], timeout=5)
         quit()
 
     print(f"Found {decklist.total_count} cards in total with {decklist.total_count_unique} unique cards.")
-    if pipe is not None:
-        pipe.send(["message", f"Found {decklist.total_count} cards in total with {decklist.total_count_unique} unique cards."])
+    if queue is not None:
+        queue.put(["message", f"Found {decklist.total_count} cards in total with {decklist.total_count_unique} unique cards."], timeout=5)
     return decklist

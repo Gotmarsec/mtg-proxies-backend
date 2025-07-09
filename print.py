@@ -15,7 +15,7 @@ def papersize(string: str) -> np.ndarray:
         return np.array([float(split[0]), float(split[1])])
     raise argparse.ArgumentTypeError()
 
-def genPdf(customArgs = None, pipe=None):
+def genPdf(customArgs = None, queue=None):
     parser = argparse.ArgumentParser(description="Prepare a decklist for printing.")
     parser.add_argument(
         "decklist",
@@ -92,10 +92,10 @@ def genPdf(customArgs = None, pipe=None):
         args = parser.parse_args(customArgs)
 
     # Parse decklist
-    decklist = parse_decklist_spec(args.decklist, inputAsString=args.directInput, pipe=pipe)
+    decklist = parse_decklist_spec(args.decklist, inputAsString=args.directInput, queue=queue)
 
     # Fetch scans
-    images = fetch_scans_scryfall(decklist, pipe=pipe)
+    images = fetch_scans_scryfall(decklist, queue=queue)
 
     # Plot cards
     if args.outfile.endswith(".pdf"):
@@ -117,7 +117,7 @@ def genPdf(customArgs = None, pipe=None):
             intelligent_background=args.intelligent_background,
             cropmarks=args.cropmarks,
             return_pdf=args.directOutput,
-            pipe=pipe
+            queue=queue
         )
 
         if(args.directOutput == True):

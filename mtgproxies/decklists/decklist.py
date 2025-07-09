@@ -153,7 +153,20 @@ def parse_decklist_stream(stream) -> tuple[Decklist, bool, list]:
     ok = True
     for line in stream:
         m = re.search(r"([0-9]+)\s+(.+?)(?:\s+\((\S*)\)\s+(\S+))?\s*$", line)
-        if m:
+        h = re.search(r"([0-9]+)\shttps:\/\/scryfall.com\/card\/(...|....|.....)\/(.+)\/(.+)", line) #regex for scryfall links
+        if h:
+            # Extract relevant data
+            count = int(h.group(1))
+            set_id = h.group(2)
+            collector_number = h.group(3)
+            card_name = h.group(4)
+
+            # Validate card print
+            card, warnings_print = validate_print(None, set_id, collector_number, unsafe_card_name=card_name)
+
+            decklist.append_card(count, card)
+            #warnings.extend([(decklist.entries[-1], level, msg) for level, msg in warnings_name + warnings_print])
+        elif m:
             # Extract relevant data
             count = int(m.group(1))
             card_name = m.group(2)

@@ -6,7 +6,7 @@ import scryfall
 from mtgproxies.decklists.decklist import Decklist
 
 
-def fetch_scans_scryfall(decklist: Decklist, pipe=None) -> list[str]:
+def fetch_scans_scryfall(decklist: Decklist, queue=None) -> list[str]:
     """Search Scryfall for scans of a decklist.
 
     Args:
@@ -23,13 +23,13 @@ def fetch_scans_scryfall(decklist: Decklist, pipe=None) -> list[str]:
         for scan in [scryfall.get_image(image_uri["png"], silent=True)] * card.count
     ]
     """
-    if pipe is not None:
-        pipe.send(["message", "Fetching artwork..."])
+    if queue is not None:
+        queue.put(["message", "Fetching artwork..."], timeout=5)
 
     result = []
     for i, card in enumerate(tqdm(decklist.cards, desc="Fetching artwork")):
-        if pipe is not None:
-            pipe.send(["progress", str(int((i+1)*50/len(decklist.cards)))])
+        if queue is not None:
+            queue.put(["progress", str(int((i+1)*50/len(decklist.cards)))], timeout=5)
         for image_uri in card.image_uris:
             for scan in [scryfall.get_image(image_uri["png"], silent=True)] * card.count:
                 result.append(scan)
